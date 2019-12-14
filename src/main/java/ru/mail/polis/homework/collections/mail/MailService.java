@@ -1,8 +1,7 @@
 package ru.mail.polis.homework.collections.mail;
 
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -12,42 +11,68 @@ import java.util.function.Consumer;
  *
  * В реализации нигде не должно быть классов Object и коллекций без типа. Используйте дженерики.
  */
-public class MailService implements Consumer {
+public class MailService implements Consumer<Envelop> {
 
+    // получатель -> список писем
+    private Map<Client, List<Envelop>> mails;
+
+    private Client mostPopularReceiver;
+    private Client mostPopularSender;
+
+    MailService() {
+        mails = new HashMap<>();
+        mostPopularReceiver = new Client();
+        mostPopularSender = new Client();
+    }
+    
     /**
      * С помощью этого метода почтовый сервис обрабатывает письма и зарплаты
      * 1 балл
      */
     @Override
-    public void accept(Object o) {
+    public void accept(Envelop envelop) {
+        if (envelop == null) {
+            return;
+        }
+        envelop.getSender().mailsSent++;
+        envelop.getRecipient().mailsCount++;
 
+        mails.computeIfAbsent(envelop.getRecipient(), recipient -> new ArrayList<>()).add(envelop);
+
+        if (envelop.getRecipient().mailsCount > mostPopularReceiver.mailsCount) {
+            mostPopularReceiver = envelop.getRecipient();
+        }
+
+        if (envelop.getSender().mailsSent > mostPopularSender.mailsSent) {
+            mostPopularSender = envelop.getSender();
+        }
     }
 
     /**
      * Метод возвращает мапу получатель -> все объекты которые пришли к этому получателю через данный почтовый сервис
      */
-    public Map<String, List> getMailBox() {
-        return null;
+    public Map<Client, List<Envelop>> getMailBox() {
+        return mails;
     }
 
     /**
      * Возвращает самого популярного отправителя
      */
-    public String getPopularSender() {
-        return null;
+    public Client getPopularSender() {
+        return mostPopularSender;
     }
 
     /**
      * Возвращает самого популярного получателя
      */
-    public String getPopularRecipient() {
-        return null;
+    public Client getPopularRecipient() {
+        return mostPopularReceiver;
     }
 
     /**
-     * Метод должен заставить обработать service все mails.
+     * Метод должен заставить обработать service все recipientMap.
      */
-    public static void process(MailService service, List mails) {
-
+    public static void process(MailService service, List<Envelop> recipientMap) {
+        recipientMap.forEach(service);
     }
 }
